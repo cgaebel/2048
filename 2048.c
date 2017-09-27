@@ -97,8 +97,8 @@ int count_zeros(const struct board b) {
 }
 
 static struct board new_tile(struct board b, unsigned* seed) {
-  int zeros    = count_zeros(b);
-  int tile     = rand_r(seed) % zeros;
+  int zeros = count_zeros(b);
+  int tile = rand_r(seed) % zeros;
   u8 tile_size = 1 + (rand_r(seed) % 10 < 1);
   for(int i = 0; i < TILES_PER_DIM; ++i)
   for(int j = 0; j < TILES_PER_DIM; ++j) {
@@ -108,7 +108,7 @@ static struct board new_tile(struct board b, unsigned* seed) {
   return b;
 }
 
-static struct board rotate_cw(struct board b) {
+static struct board rotate_cw(const struct board b) {
   struct board r;
   for(int i = 0; i < TILES_PER_DIM; ++i)
   for(int j = 0; j < TILES_PER_DIM; ++j)
@@ -138,11 +138,6 @@ static void merge_row_left(u8 row[TILES_PER_DIM]) {
 static struct board merge_left(struct board b) {
   for(int i = 0; i < TILES_PER_DIM; ++i)
     merge_row_left(b.tiles[i]);
-  return b;
-}
-
-static struct board rotate_cw_n(struct board b, int n) {
-  while(n--) b = rotate_cw(b);
   return b;
 }
 
@@ -177,13 +172,16 @@ static int cw_rotations_of_key(int key) {
   }
 }
 
-static struct board update(struct board b0, int key, unsigned* seed) {
-  int rotations = cw_rotations_of_key(key);
-  if(rotations < 0) return b0;
+static struct board update(const struct board b0, int key, unsigned* seed) {
+  struct board b = b0;
 
-  struct board b = rotate_cw_n(b0, rotations);
-  b = merge_left(b);
-  b = rotate_cw_n(b, (4 - rotations) % 4);
+  int rotations = cw_rotations_of_key(key);
+  if(rotations < 0) return b;
+
+  for(int i = 0; i < 4; ++i) {
+    if(i == rotations) b = merge_left(b);
+    rotate_cw(b);
+  }
 
   if(!eq(b, b0))
     b = new_tile(b, seed);
