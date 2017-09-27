@@ -2,8 +2,6 @@
 
 ## Usage
 
-To play:
-
     clang -Wall -Os -lncurses 2048.c -o 2048
     ./2048
 
@@ -12,8 +10,8 @@ To play:
 This is a demonstration of what simple code looks like. I come back to it when I
 find myself forgetting.
 
-Think of it as a zen garden, but for code. A place for the weary to rest their
-eyes.
+It's a zen garden -- a place for the weary programmer to rest their eyes and
+think.
 
 ## Contributing
 
