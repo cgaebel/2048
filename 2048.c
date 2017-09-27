@@ -180,7 +180,7 @@ static struct board update(const struct board b0, int key, unsigned* seed) {
 
   for(int i = 0; i < 4; ++i) {
     if(i == rotations) b = merge_left(b);
-    rotate_cw(b);
+    b = rotate_cw(b);
   }
 
   if(!eq(b, b0))
