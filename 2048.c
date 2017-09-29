@@ -183,7 +183,7 @@ static int cw_rotations_of_key(int key) {
   }
 }
 
-static int dscore(struct board b0, struct board b1) {
+static int new_points(struct board b0, struct board b1) {
   i8 b0_count[TARGET_TILE+1] = {0};
   i8 b1_count[TARGET_TILE+1] = {0};
   for(int i = 0; i < TILES_PER_DIM; ++i)
@@ -213,7 +213,7 @@ static struct game update(struct game g, int key) {
     g.board = rotate_cw(g.board);
   }
 
-  g.score += dscore(b0, g.board);
+  g.score += new_points(b0, g.board);
 
   if(!eq(g.board, b0))
     g.board = new_tile(g.board, &g.seed);
