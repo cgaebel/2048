@@ -194,10 +194,9 @@ static int new_points(struct board b0, struct board b1) {
   int score = 0;
   for(int i = TARGET_TILE; i >= 1; i--) {
     i8 dcount = b1_count[i] - b0_count[i];
-    if(dcount > 0) {
-      b0_count[i-1] -= 2;
-      score += (int)dcount << i;
-    }
+    if(dcount <= 0) continue;
+    b0_count[i-1] -= 2;
+    score += (int)dcount << i;
   }
   return score;
 }
