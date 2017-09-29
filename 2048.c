@@ -13,12 +13,20 @@
 #define TILE_HEIGHT   3
 #define TILES_PER_DIM 4
 
-#define u8 uint8_t
+#define i8  int8_t
+#define u8  uint8_t
+#define u64 uint64_t
 
 // If a tile at (i, j) is present, tiles[i][j] contains its log_2 value.
 // If a tile at (i, j) is not present, tiles[i][j] = 0.
 struct board {
   u8 tiles[TILES_PER_DIM][TILES_PER_DIM];
+};
+
+struct game {
+  struct board board;
+  int score;
+  unsigned seed;
 };
 
 static char itoc(int x, char zero) { return x == 0 ? zero : (x + '0');    }
@@ -55,36 +63,39 @@ static void h_lines(char v_edge, char h_edge, int lspace, int n) {
   for(int i = 0; i < n; ++i) h_line(v_edge, h_edge, lspace);
 }
 
-static void draw_tile_contents_row(const struct board* b, int i, int lspace) {
+static void draw_tile_contents_row(const u8 row[TILES_PER_DIM], int lspace) {
   rep(' ', lspace);
-  for(int j = 0; j < TILES_PER_DIM; ++j) {
+  for(int i = 0; i < TILES_PER_DIM; ++i) {
     addch('|');
-    draw_u8(b->tiles[i][j]);
+    draw_u8(row[i]);
   }
   addch('|');
   addch('\n');
 }
 
-static void print(const struct board* b) {
+static void print(struct game g) {
   int x, y;
   getmaxyx(stdscr, y, x);
   int lspace = (x - ((1 + TILE_WIDTH ) * TILES_PER_DIM + 1)) / 2;
-  int tspace = (y - ((1 + TILE_HEIGHT) * TILES_PER_DIM + 1)) / 2;
+  int tspace = (y - ((1 + TILE_HEIGHT) * TILES_PER_DIM + 1)) / 2 - 3;
   int top_vspace = (TILE_HEIGHT - 1) / 2;
   int bot_vspace = (TILE_HEIGHT - 1) - top_vspace;
   rep('\n', tspace);
+  rep(' ', x/2 - 5);
+  printw("Score: %d\n", g.score);
+  rep('\n', 2);
   for(int i = 0; i < TILES_PER_DIM; ++i) {
     h_line('+', '-', lspace);
     h_lines('|', ' ', lspace, top_vspace);
-    draw_tile_contents_row(b, i, lspace);
+    draw_tile_contents_row(g.board.tiles[i], lspace);
     h_lines('|', ' ', lspace, bot_vspace);
   }
   h_line('+', '-', lspace);
 }
 
-static void draw(const struct board* b) {
+static void draw(struct game g) {
   move(0, 0);
-  print(b);
+  print(g);
   refresh();
 }
 
@@ -172,21 +183,42 @@ static int cw_rotations_of_key(int key) {
   }
 }
 
-static struct board update(const struct board b0, int key, unsigned* seed) {
-  struct board b = b0;
+static int dscore(struct board b0, struct board b1) {
+  i8 b0_count[TARGET_TILE+1] = {0};
+  i8 b1_count[TARGET_TILE+1] = {0};
+  for(int i = 0; i < TILES_PER_DIM; ++i)
+  for(int j = 0; j < TILES_PER_DIM; ++j) {
+    b0_count[b0.tiles[i][j]]++;
+    b1_count[b1.tiles[i][j]]++;
+  }
+  int score = 0;
+  for(int i = TARGET_TILE; i >= 1; i--) {
+    i8 dcount = b1_count[i] - b0_count[i];
+    if(dcount > 0) {
+      b0_count[i-1] -= 2;
+      score += (int)dcount << i;
+    }
+  }
+  return score;
+}
 
+static struct game update(struct game g, int key) {
   int rotations = cw_rotations_of_key(key);
-  if(rotations < 0) return b;
+  if(rotations < 0) return g;
+
+  struct board b0 = g.board;
 
   for(int i = 0; i < 4; ++i) {
-    if(i == rotations) b = merge_left(b);
-    b = rotate_cw(b);
+    if(i == rotations) g.board = merge_left(g.board);
+    g.board = rotate_cw(g.board);
   }
 
-  if(!eq(b, b0))
-    b = new_tile(b, seed);
+  g.score += dscore(b0, g.board);
 
-  return b;
+  if(!eq(g.board, b0))
+    g.board = new_tile(g.board, &g.seed);
+
+  return g;
 }
 
 static void sigint(int _) {
@@ -195,7 +227,6 @@ static void sigint(int _) {
 }
 
 int main(void) {
-  unsigned seed = time(NULL);
   struct sigaction act;
   act.sa_handler = sigint;
   sigaction(SIGINT, &act, NULL);
@@ -204,14 +235,20 @@ int main(void) {
   cbreak();
   noecho();
   keypad(stdscr, true);
-  struct board b = { .tiles = {{0}} };
+  struct game g =
+    { .board = { .tiles = {{0}} }
+    , .score = 0
+    , .seed  = time(NULL)
+    };
   for(int i = 0; i < INITIAL_TILES; ++i)
-    b = new_tile(b, &seed);
-  while(!is_victory(b) && !is_loss(b)) {
-    draw(&b);
+    g.board = new_tile(g.board, &g.seed);
+  while(!is_victory(g.board) && !is_loss(g.board)) {
+    draw(g);
     int key = getch();
-    b = update(b, key, &seed);
+    g = update(g, key);
   }
   endwin();
-  printf("You %s!\n", is_victory(b) ? "WIN" : "LOSE");
+  printf("You %s, with score %d!\n",
+    is_victory(g.board) ? "WIN" : "LOSE",
+    g.score);
 }
