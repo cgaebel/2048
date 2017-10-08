@@ -132,26 +132,25 @@ static void rotate_cw(struct board* b) {
   *b = r;
 }
 
-static i8 move_nonzero_first(u8 row[], i8 len) {
+static void move_nonzero_first(u8 row[]) {
   i8 start_of_zeros = 0;
-  FOR(i, 0, len) {
+  FOR(i, 0, TILES_PER_DIM) {
     if(row[i] == 0) continue;
     // consider the case [i == start_of_zeros]
     u8 t = row[i];
     row[i] = 0;
     row[start_of_zeros++] = t;
   }
-  return start_of_zeros;
 }
 
 static void merge_row_left(u8 row[TILES_PER_DIM]) {
-  i8 num_nonzero = move_nonzero_first(row, TILES_PER_DIM);
-  FOR(i, 0, num_nonzero - 1) {
-    if(row[i+0] != row[i+1]) continue;
+  move_nonzero_first(row);
+  FOR(i, 0, TILES_PER_DIM - 1) {
+    if(row[i] == 0 || row[i] != row[i+1]) continue;
     row[i]  += 1;
     row[++i] = 0;
   }
-  move_nonzero_first(row, num_nonzero);
+  move_nonzero_first(row);
 }
 
 static void merge_left(struct board* b) {
