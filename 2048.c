@@ -13,9 +13,8 @@
 #define TILE_HEIGHT   3
 #define TILES_PER_DIM 4
 
-#define i8  int8_t
-#define u8  uint8_t
-#define u64 uint64_t
+#define i8 int8_t
+#define u8 uint8_t
 
 #define FOR(i, s, n) \
   for(i8 i = s; i < n; ++i)
