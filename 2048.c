@@ -13,8 +13,9 @@
 #define TILE_HEIGHT   3
 #define TILES_PER_DIM 4
 
-#define i8 int8_t
-#define u8 uint8_t
+#define i8  int8_t
+#define u8  uint8_t
+#define u32 uint32_t
 
 #define FOR(i, s, n) \
   for(i8 i = s; i < n; ++i)
@@ -34,12 +35,12 @@ struct board {
 
 struct game {
   struct board board;
-  int          score;
+  u32          score;
   unsigned     seed;
 };
 
-static char itoc(int x, char zero) { return x == 0 ? zero : (x + '0'); }
-static void rep(char c, i8 n)      { FOR(i, 0, n) addch(c); }
+static char itoc(u8 x, char zero) { return x == 0 ? zero : (x + '0'); }
+static void rep(char c, i8 n)     { FOR(i, 0, n) addch(c); }
 
 // draws nothing if x == 0
 static void draw_u8(int x) {
@@ -108,15 +109,15 @@ static void draw(const struct game* g) {
   refresh();
 }
 
-int count_zeros(const struct board* b) {
-  int zeros = 0;
+u8 count_zeros(const struct board* b) {
+  u8 zeros = 0;
   FOR_TILES(i, j) zeros += b->tiles[i][j] == 0;
   return zeros;
 }
 
 static void new_tile(struct board* b, unsigned* seed) {
-  int zeros = count_zeros(b);
-  int tile = rand_r(seed) % zeros;
+  u8 zeros = count_zeros(b);
+  i8 tile = rand_r(seed) % zeros;
   // 10% chance of 4, 90% chance of 2
   u8 tile_size = 1 + (rand_r(seed) % 10 < 1);
   FOR_TILES(i, j) {
@@ -131,10 +132,10 @@ static void rotate_cw(struct board* b) {
   *b = r;
 }
 
-static int move_nonzero_first(u8 row[], u8 len) {
-  int num_nonzero = 0;
-  FOR(i, 0, len) if(row[i])    row[num_nonzero++] = row[i];
-  FOR(i, 0, len - num_nonzero) row[num_nonzero+i] = 0;
+static u8 move_nonzero_first(u8 row[], u8 len) {
+  u8 num_nonzero = 0;
+  FOR(i, 0, len) if(row[i]) row[num_nonzero++] = row[i];
+  FOR(i, num_nonzero, len)  row[i]             = 0;
   return num_nonzero;
 }
 
@@ -171,7 +172,7 @@ static bool is_loss(const struct board* b) {
   return no_moves;
 }
 
-static int cw_rotations_of_key(int key) {
+static i8 cw_rotations_of_key(int key) {
   switch(key) {
   case KEY_LEFT:  return 0;
   case KEY_DOWN:  return 1;
@@ -181,23 +182,23 @@ static int cw_rotations_of_key(int key) {
   }
 }
 
-static int new_points(const struct board* b0, const struct board* b1) {
+static u32 new_points(const struct board* b0, const struct board* b1) {
   // dcount = # old tiles - # new tiles
   i8 dcount[TARGET_TILE+1] = {0};
   FOR_TILES(i, j) dcount[b0->tiles[i][j]] += 1;
   FOR_TILES(i, j) dcount[b1->tiles[i][j]] -= 1;
-  int score = 0;
+  u32 score = 0;
   FOR(i, 1, TARGET_TILE) {
     i8 upgrades = dcount[i] / 2;
     if(upgrades <= 0) continue;
-    score += (int)upgrades << (int)(i+1);
+    score += (u32)upgrades << (u32)(i+1);
     dcount[i+1] += upgrades;
   }
   return score;
 }
 
 static void update(struct game* g, int key) {
-  int rotations = cw_rotations_of_key(key);
+  i8 rotations = cw_rotations_of_key(key);
   if(rotations < 0) return;
 
   struct board* board = &g->board;
