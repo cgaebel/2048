@@ -109,14 +109,14 @@ static void draw(const struct game* g) {
   refresh();
 }
 
-u8 count_zeros(const struct board* b) {
-  u8 zeros = 0;
+i8 count_zeros(const struct board* b) {
+  i8 zeros = 0;
   FOR_TILES(i, j) zeros += b->tiles[i][j] == 0;
   return zeros;
 }
 
 static void new_tile(struct board* b, unsigned* seed) {
-  u8 zeros = count_zeros(b);
+  i8 zeros = count_zeros(b);
   i8 tile = rand_r(seed) % zeros;
   // 10% chance of 4, 90% chance of 2
   u8 tile_size = 1 + (rand_r(seed) % 10 < 1);
@@ -132,8 +132,8 @@ static void rotate_cw(struct board* b) {
   *b = r;
 }
 
-static u8 move_nonzero_first(u8 row[], u8 len) {
-  u8 start_of_zeros = 0;
+static i8 move_nonzero_first(u8 row[], i8 len) {
+  i8 start_of_zeros = 0;
   FOR(i, 0, len) {
     if(row[i] == 0) continue;
     // consider the case [i == start_of_zeros]
@@ -145,7 +145,7 @@ static u8 move_nonzero_first(u8 row[], u8 len) {
 }
 
 static void merge_row_left(u8 row[TILES_PER_DIM]) {
-  u8 num_nonzero = move_nonzero_first(row, TILES_PER_DIM);
+  i8 num_nonzero = move_nonzero_first(row, TILES_PER_DIM);
   FOR(i, 0, num_nonzero - 1) {
     if(row[i+0] != row[i+1]) continue;
     row[i]  += 1;
