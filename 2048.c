@@ -39,7 +39,7 @@ struct game {
 };
 
 static char itoc(int x, char zero) { return x == 0 ? zero : (x + '0'); }
-static void rep(char c, int n)     { FOR(i, 0, n) addch(c); }
+static void rep(char c, i8 n)      { FOR(i, 0, n) addch(c); }
 
 // draws nothing if x == 0
 static void draw_u8(int x) {
