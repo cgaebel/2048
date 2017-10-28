@@ -17,6 +17,8 @@
 #define u8  uint8_t
 #define u32 uint32_t
 
+#define align(n) __attribute__((aligned(n)))
+
 #define FOR(i, s, n) \
   for(i8 i = s; i < n; ++i)
 
@@ -30,7 +32,7 @@
 // If a tile at (i, j) is present, tiles[i][j] contains its log_2 value.
 // If a tile at (i, j) is not present, tiles[i][j] = 0.
 struct board {
-  u8 tiles[TILES_PER_DIM][TILES_PER_DIM];
+  u8 tiles[TILES_PER_DIM][TILES_PER_DIM] align(16);
 };
 
 struct game {
@@ -132,7 +134,7 @@ static void rotate_cw(struct board* b) {
   *b = r;
 }
 
-static void move_nonzero_first(u8 row[]) {
+static void move_nonzero_first(u8 row[TILES_PER_DIM]) {
   i8 start_of_zeros = 0;
   FOR(i, 0, TILES_PER_DIM) {
     if(row[i] == 0) continue;
